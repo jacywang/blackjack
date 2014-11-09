@@ -1,10 +1,8 @@
 require "pry"
 def initialize_shoe
-  deck = []
-  4.times do
-    (2..10).each { |n| deck << n }
-    deck << "Jack" << "Queen" << "King" << "Ace" 
-  end
+  suits = ["H", "S", "D", "C"]
+  cards = [2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", "A"]
+  deck = suits.product(cards)
   shoe = deck
   [1, 2, 3].sample.times { |n| shoe += deck}
   shoe.shuffle!
@@ -21,11 +19,13 @@ def display_cards(player_cards, dealer_cards, player_stay = false)
     puts "Dealer's cards: #{["*"] + dealer_cards[1..dealer_cards.length]}"
   end
   puts "#{PLAYER_NAME}'s cards: #{player_cards}"
+  puts "Dealer has #{calculate_cards_total(dealer_cards)}." if player_stay
+  puts "#{PLAYER_NAME} has #{calculate_cards_total(player_cards)}."
 end
 
 def card_to_num_except_ace(card)
   card_value_table = { 2 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 7, 8 => 8, 9 =>9,
-  10 => 10, "Jack" => 10, "Queen" => 10, "King" => 10 }
+  10 => 10, "J" => 10, "Q" => 10, "K" => 10 }
   card_value_table[card]
 end
 
@@ -38,8 +38,9 @@ def calculate_ace_sum(num_of_ace, sum_without_ace)
 end
 
 def calculate_cards_total(cards)
-  sum_without_ace = cards.select { |card| card != 'Ace'}.inject(0) { |sum, card| sum + card_to_num_except_ace(card) }
-  num_of_ace = cards.count("Ace")
+  cards_value = cards.map { |card| card[1]}
+  sum_without_ace = cards_value.select { |card| card != 'A'}.inject(0) { |sum, card| sum + card_to_num_except_ace(card) }
+  num_of_ace = cards_value.count("A")
   cards_sum = sum_without_ace + calculate_ace_sum(num_of_ace, sum_without_ace)
 end
 
@@ -62,7 +63,7 @@ end
 def player_hit_21_or_busted?(cards)
   player_cards_sum = calculate_cards_total(cards)
   if player_cards_sum == 21
-    puts "#{PLAYER_NAME} has 21 and won!"
+    puts "#{PLAYER_NAME} won!"
     return true
   end
   if player_cards_sum > 21
@@ -94,27 +95,30 @@ def check_winner(player_cards, dealer_cards)
   end
 end
 
+puts "Welcome to Blackjack!"
 puts "What's your name?"
 PLAYER_NAME = gets.chomp
-puts "Welcome to the BLACKJACK game, #{PLAYER_NAME}!"
+puts "Hi #{PLAYER_NAME}, enjoy the game!"
 
 begin 
   shoe = initialize_shoe
 
   player_cards = [get_card(shoe), get_card(shoe)]
   dealer_cards = [get_card(shoe), get_card(shoe)]
-
+  
   display_cards(player_cards, dealer_cards)
 
   if calculate_cards_total(player_cards) == 21
     puts "#{PLAYER_NAME} won!"
   else 
+
     begin 
       player_choice = player_take_action
+      puts "--------------------"
       player_cards << get_card(shoe) if player_choice == "Hit"
       display_cards(player_cards, dealer_cards) if player_choice == "Hit"
     end until player_choice == "Stay" || player_hit_21_or_busted?(player_cards)
-    
+
     if player_choice == "Stay"
       display_cards(player_cards,dealer_cards,true)
       result = check_winner(player_cards, dealer_cards)
@@ -133,4 +137,5 @@ begin
   begin 
     play_again = gets.chomp.upcase
   end until ["Y", "N"].include?(play_again)
+  puts "--------------------"
 end until play_again == "N"
