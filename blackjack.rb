@@ -60,7 +60,7 @@ def player_take_action
 end
 
 def player_hit_21_or_busted?(cards)
-  player_cards_sum = calculate_cards_total(player_cards)
+  player_cards_sum = calculate_cards_total(cards)
   if player_cards_sum == 21
     puts "#{PLAYER_NAME} has 21 and won!"
     return true
